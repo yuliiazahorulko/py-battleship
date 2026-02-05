@@ -105,8 +105,6 @@ class Battleship:
         if counter_four_deck != 1:
             raise ValueError("there should be 1 four-deck ship")
 
-        # ships shouldn't be located in the neighboring cells (even if cells are neighbors by diagonal).
-
     def fire(self, location: tuple) -> str:
         if location in self.field.keys():
             temp_deck = Deck(location[0], location[1])
