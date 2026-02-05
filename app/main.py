@@ -7,10 +7,18 @@ class Deck:
         self.column = column
         self.is_alive = is_alive
 
-    def __eq__(self, other: Deck) -> bool:
-        if self.row == other.row and self.column == other.column:
-            return True
+    def __repr__(self) -> str:
+        return f"Deck: row={self.row}, column={self.column}, " \
+               f"is_alive={self.is_alive}"
+
+    def __eq__(self, other: Deck | tuple) -> bool:
+        if isinstance(other, Deck):
+            if self.row == other.row and self.column == other.column:
+                return True
+            return False
         else:
+            if self.row == other[0] and self.column == other[1]:
+                return True
             return False
 
 
@@ -20,11 +28,9 @@ class Ship:
                  end: tuple,
                  is_drowned: bool = False
                  ) -> None:
-        """Create decks and save them to a list `self.decks`"""
         self.decks = []
         self.is_drowned = is_drowned
 
-        # horizontal ship
         if start[0] == end[0]:
             temp = list(range(start[1], end[1] + 1))
             for temp_column in temp:
@@ -40,7 +46,6 @@ class Ship:
         return f"Ship: {self.decks}, is_drowned={self.is_drowned}"
 
     def get_deck(self, row: int, column: int) -> Deck:
-        """Find the corresponding deck in the list"""
         return [deck
                 for deck in self.decks
                 if deck.row == row
@@ -48,17 +53,22 @@ class Ship:
                 ][0]
 
     def fire(self, row: int, column: int) -> None:
-        """Change the `is_alive` status of the deck
-        And update the `is_drowned` value if it's needed"""
-        pass
+        if (row, column) in self.decks and self.is_drowned is False:
+            index_of_deck = self.decks.index(Deck(row, column))
+
+            if self.decks[index_of_deck].is_alive:
+                self.decks[index_of_deck].is_alive = False
+
+                counter = len(self.decks)
+                for deck in self.decks:
+                    if deck.is_alive is False:
+                        counter -= 1
+                if counter == 0:
+                    self.is_drowned = True
 
 
 class Battleship:
     def __init__(self, ships: list) -> None:
-        """ Create a dict `self.field`.
-         Its keys are tuples - the coordinates of the non-empty cells,
-         A value for each cell is a reference to the ship
-         which is located in it """
         self.field = {}
 
         for some_ship in ships:
@@ -66,32 +76,49 @@ class Battleship:
 
             for temp_ship in ship.decks:
                 self.field[(temp_ship.row, temp_ship.column)] = ship
+        self._validate_field(ships)
 
-    def _validate_field(self) -> None:
-        pass
+    def _validate_field(self, ships: list) -> None:
+        if len(ships) != 10:
+            raise ValueError("the total number of the ships should be 10")
+
+        counter_single_deck = 0
+        counter_double_deck = 0
+        counter_three_deck = 0
+        counter_four_deck = 0
+        ships = set(self.field.values())
+        for ship in ships:
+            if len(ship.decks) == 1:
+                counter_single_deck += 1
+            if len(ship.decks) == 2:
+                counter_double_deck += 1
+            if len(ship.decks) == 3:
+                counter_three_deck += 1
+            if len(ship.decks) == 4:
+                counter_four_deck += 1
+        if counter_single_deck != 4:
+            raise ValueError("there should be 4 single-deck ships")
+        if counter_double_deck != 3:
+            raise ValueError("there should be 3 double-deck ships")
+        if counter_three_deck != 2:
+            raise ValueError("there should be 2 three-deck ships")
+        if counter_four_deck != 1:
+            raise ValueError("there should be 1 four-deck ship")
+
+        # ships shouldn't be located in the neighboring cells (even if cells are neighbors by diagonal).
 
     def fire(self, location: tuple) -> str:
-        """ This function should check whether the location
-        # is a key in the `self.field`
-        # If it is, then it should check if this cell is the last alive
-        # in the ship or not. """
         if location in self.field.keys():
-            if self.field[location].is_drowned is False:
-                temp_deck = Deck(location[0], location[1])
-                index_of_deck = self.field[location].decks.index(temp_deck)
-                if self.field[location].decks[index_of_deck].is_alive:
-                    self.field[location].decks[index_of_deck].is_alive = False
+            temp_deck = Deck(location[0], location[1])
+            print(temp_deck)
+            print(self.field[location].decks)
+            print(temp_deck in self.field[location].decks)
+            index_of_deck = self.field[location].decks.index(temp_deck)
 
-                    counter = len(self.field[location].decks)
-                    for deck in self.field[location].decks:
-                        if deck.is_alive is False:
-                            counter -= 1
-                    if counter == 0:
-                        return "Sunk!"
+            self.field[location].fire(location[0], location[1])
 
-                    return "Hit!"
-        else:
-            return "Miss!"
-
-    def print_field(self) -> None:
-        pass
+            if self.field[location].is_drowned:
+                return "Sunk!"
+            elif not self.field[location].decks[index_of_deck].is_alive:
+                return "Hit!"
+        return "Miss!"
