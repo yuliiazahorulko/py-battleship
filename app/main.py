@@ -90,27 +90,24 @@ class Battleship:
         for ship in ships:
             if len(ship.decks) == 1:
                 counter_single_deck += 1
-            if len(ship.decks) == 2:
+            elif len(ship.decks) == 2:
                 counter_double_deck += 1
-            if len(ship.decks) == 3:
+            elif len(ship.decks) == 3:
                 counter_three_deck += 1
-            if len(ship.decks) == 4:
+            elif len(ship.decks) == 4:
                 counter_four_deck += 1
         if counter_single_deck != 4:
             raise ValueError("there should be 4 single-deck ships")
-        if counter_double_deck != 3:
+        elif counter_double_deck != 3:
             raise ValueError("there should be 3 double-deck ships")
-        if counter_three_deck != 2:
+        elif counter_three_deck != 2:
             raise ValueError("there should be 2 three-deck ships")
-        if counter_four_deck != 1:
+        elif counter_four_deck != 1:
             raise ValueError("there should be 1 four-deck ship")
 
     def fire(self, location: tuple) -> str:
         if location in self.field.keys():
             temp_deck = Deck(location[0], location[1])
-            print(temp_deck)
-            print(self.field[location].decks)
-            print(temp_deck in self.field[location].decks)
             index_of_deck = self.field[location].decks.index(temp_deck)
 
             self.field[location].fire(location[0], location[1])
